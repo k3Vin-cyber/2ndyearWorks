@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Task Tracker</title>
+    <style>
+        /* Minimalist, Tactile Aesthetic */
+        :root {
+            --bg-color: #f4f4f0;
+            --text-color: #1a1a1a;
+            --accent-color: #333333;
+            --delete-hover: #ffb3b3;
+            --done-hover: #b3ffcc;
+            --border-style: 2px solid #1a1a1a;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace; 
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 500px; 
+        }
+
+        .tracker-panel {
+            background: #fff;
+            padding: 20px;
+            border: var(--border-style);
+            box-shadow: 8px 8px 0px var(--text-color);
+            transition: box-shadow 0.3s ease;
+        }
+
+        h2 {
+            margin-top: 0;
+            text-transform: uppercase;
+            border-bottom: var(--border-style);
+            padding-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* --- Interactive UI: Input Field --- */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 12px;
+            border: var(--border-style);
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="text"]:focus {
+            transform: translate(-2px, -2px);
+            box-shadow: 4px 4px 0px var(--text-color);
+        }
+
+        /* --- Interactive UI: Main Add Button --- */
+        #addBtn {
+            padding: 10px 20px;
+            border: var(--border-style);
+            background: var(--text-color);
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+            font-family: inherit;
+            text-transform: uppercase;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            transition: all 0.1s ease-in-out; 
+        }
+
+        #addBtn:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px rgba(0,0,0,0.2);
+        }
+
+        #addBtn:hover {
+            background: var(--accent-color);
+        }
+
+        /* --- Task Row Animations & Layout --- */
+        .task-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            border: var(--border-style);
+            margin-bottom: 12px;
+            background: var(--bg-color);
+            opacity: 0; 
+            transform: translateY(-10px);
+            animation: slideIn 0.4s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        .task-row.removing {
+            animation: slideOut 0.3s ease-in forwards;
+        }
+
+        .task-text {
+            flex-grow: 1;
+            transition: all 0.2s ease;
+        }
+
+        /* NEW: Strikethrough style for completed tasks */
+        .completed {
+            text-decoration: line-through;
+            text-decoration-thickness: 2px;
+            color: #888;
+            font-style: italic;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* --- Secondary Buttons (Done & Delete) --- */
+        .done-btn, .delete-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 2px solid var(--text-color);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 3px 3px 0px rgba(0,0,0,0.1);
+            transition: all 0.1s ease-in-out;
+        }
+
+        .done-btn:hover {
+            background: var(--done-hover);
+        }
+
+        .delete-btn:hover {
+            background: var(--delete-hover);
+        }
+
+        .done-btn:active, .delete-btn:active {
+            transform: translate(3px, 3px);
+            box-shadow: 0px 0px 0px rgba(0,0,0,0.1);
+        }
+
+        /* --- Keyframes --- */
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="tracker-panel">
+            <h2>Study Tracker</h2>
+            <div class="input-group">
+                <input type="text" id="taskInput" placeholder="Enter assignment or task...">
+                <button id="addBtn">Add Task</button>
+            </div>
+            <div id="taskList"></div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        const input = document.querySelector("#taskInput");   
+        const addBtn = document.querySelector("#addBtn");     
+        const taskList = document.querySelector("#taskList"); 
+
+        addBtn.addEventListener("click", function() {
+            const taskText = input.value.trim(); 
+            
+            if (!taskText) {
+                alert("Please enter a task before adding!"); 
+                return; 
+            }
+
+            const row = document.createElement("div"); 
+            row.className = "task-row"; 
+            
+            // In-update naton ang innerHTML para may Action Buttons wrapper na
+            row.innerHTML = `
+                <span class="task-text">${taskText}</span>
+                <div class="action-btns">
+                    <button class="done-btn">Done</button>
+                    <button class="delete-btn">Delete</button>
+                </div>
+            `; 
+            
+            taskList.appendChild(row); 
+            input.value = ""; 
+        });
+
+        // Event Delegation handling both Done and Delete clicks
+        taskList.addEventListener("click", function(event) {
+            
+            // Kon i-click ang Delete Button
+            if (event.target.classList.contains("delete-btn")) {
+                const rowToRemove = event.target.closest('.task-row');
+                rowToRemove.classList.add("removing");
+                
+                setTimeout(() => {
+                    rowToRemove.remove(); 
+                }, 300);
+            }
+            
+            // Kon i-click ang Done Button
+            if (event.target.classList.contains("done-btn")) {
+                // Gina-pangita niya ang span text sa sulod sang row kag gina-toggle ang 'completed' class
+                const textSpan = event.target.closest('.task-row').querySelector('.task-text');
+                textSpan.classList.toggle("completed");
+            }
+        });
+
+        input.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                addBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
