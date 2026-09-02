@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crazy Web Photo Booth</title>
+    <style>
+        /* --- GLOBAL STYLES & RETRO GRID --- */
+        :root {
+            --bg-color: #f7f3ed;
+            --text-color: #3e3b38;
+            --primary: #d95b28;
+            --primary-hover: #c24e20;
+            --grid-color: rgba(0, 0, 0, 0.05);
+            --panel-bg: #ffffff;
+        }
+
+        /* Theme: Cyberpunk */
+        body.theme-cyberpunk {
+            --bg-color: #0b0c10;
+            --text-color: #66fcf1;
+            --primary: #45a29e;
+            --primary-hover: #66fcf1;
+            --grid-color: rgba(102, 252, 241, 0.1);
+            --panel-bg: #1f2833;
+        }
+
+        /* Theme: Darkroom */
+        body.theme-darkroom {
+            --bg-color: #1a0505;
+            --text-color: #ff4d4d;
+            --primary: #cc0000;
+            --primary-hover: #ff3333;
+            --grid-color: rgba(255, 51, 51, 0.1);
+            --panel-bg: #330a0a;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            background-image: 
+                linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- SCREENS --- */
+        .screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            text-align: center;
+            box-sizing: border-box;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 { 
+            font-size: 3rem; 
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 0px var(--primary); 
+            letter-spacing: -2px;
+        }
+        
+        p.subtitle {
+            font-size: 1.2rem;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        /* --- BUTTONS --- */
+        button {
+            background-color: var(--primary);
+            color: #fff;
+            border: 2px solid transparent;
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 8px;
+            font-weight: bold;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+        button:active { transform: translateY(2px) scale(0.98); }
+
+        .theme-btn {
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            border: 2px solid var(--primary);
+        }
+        .theme-btn:hover { background-color: var(--primary); color: #fff; }
+
+        /* --- CAPTURE SCREEN --- */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 4/3;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 6px solid var(--primary);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+            transition: background-color 0.1s; /* For flash effect */
+        }
+        
+        /* The flash class applied via JS */
+        .camera-container.flash {
+            background-color: #ffffff;
+            border-color: #ffffff;
+        }
+        .camera-container.flash video {
+            opacity: 0.2;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* Mirror effect */
+            transition: opacity 0.1s;
+        }
+
+        #countdown-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        #shot-counter {
+            font-size: 1.2rem;
+            font-weight: bold;
+            background: var(--panel-bg);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        canvas { display: none; } /* Hidden canvas for master strip processing */
+
+        /* --- PROCESSING MACHINE UI (Metallic Style) --- */
+        .machine-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        .machine-chassis {
+            display: flex;
+            background: linear-gradient(135deg, #e6e9ec, #9ba3ab);
+            padding: 25px;
+            border-radius: 16px;
+            border: 3px solid #666;
+            box-shadow: 
+                inset 0 2px 3px rgba(255,255,255,0.8),
+                inset 0 -5px 15px rgba(0,0,0,0.3),
+                0 25px 40px rgba(0,0,0,0.5);
+            gap: 25px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Fake Screws for the Chassis */
+        .machine-chassis::before, .machine-chassis::after {
+            content: '';
+            position: absolute;
+            width: 8px; height: 8px;
+            background: #555;
+            border-radius: 50%;
+            box-shadow: inset 1px 1px 2px #222, 1px 1px 1px rgba(255,255,255,0.7);
+        }
+        .machine-chassis::before { top: 12px; left: 12px; }
+        .machine-chassis::after { top: 12px; right: 12px; }
+
+        /* Left Panel: The LED and Timer */
+        .machine-panel-left {
+            background-color: #1a3325; /* Classic dark green hardware board */
+            border-radius: 8px;
+            padding: 20px 15px;
+            width: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 2px 2px rgba(255,255,255,0.3);
+        }
+        
+        .machine-text {
+            color: #d1d5db;
+            font-weight: bold;
+            letter-spacing: 1px;
+            font-size: 0.75rem;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .timer-box {
+            background: #fff;
+            color: #1a3325;
+            font-size: 3.5rem;
+            font-weight: bold;
+            font-family: Arial, sans-serif;
+            padding: 10px 25px;
+            border-radius: 4px;
+            box-shadow: inset 0 4px 10px rgba(0,0,0,0.3);
+            margin: 15px 0 5px 0;
+            border: 1px solid #000;
+        }
+
+        .led-indicator {
+            width: 24px;
+            height: 24px;
+            background-color: #ff3333; /* Starts Red */
+            border-radius: 50%;
+            box-shadow: 0 0 15px #ff3333, inset 0 3px 5px rgba(0,0,0,0.6);
+            margin: 20px 0 15px 0;
+            border: 2px solid #111;
+            transition: all 0.4s ease;
+        }
+        .led-indicator.green {
+            background-color: #22c55e;
+            box-shadow: 0 0 20px #22c55e, inset 0 3px 5px rgba(0,0,0,0.6);
+        }
+
+        /* Right Panel: The Dispenser Slot */
+        .machine-panel-right {
+            background: linear-gradient(to bottom, #333, #111);
+            border-radius: 8px;
+            width: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 12px;
+            border: 2px solid #000;
+            box-shadow: inset 0 2px 2px rgba(255,255,255,0.2);
+        }
+
+        .machine-slot {
+            width: 125px; /* Scaled down representation of the 400px canvas */
+            height: 280px; 
+            background-color: #050505;
+            position: relative;
+            overflow: hidden; /* CRUCIAL: Hides the photo before sliding down */
+            border-radius: 2px;
+            box-shadow: inset 0px 15px 25px rgba(0,0,0,1);
+            border: 1px solid #000;
+        }
+
+        /* The Printed Strip Animation */
+        .printed-photo {
+            width: 100%;
+            height: auto;
+            position: absolute;
+            top: -105%; /* Start hidden completely above the slot */
+            left: 0;
+            transition: top 5s cubic-bezier(0.25, 1, 0.5, 1); /* 5s slide animation */
+            border: 3px solid white; /* Outer strip border */
+            box-sizing: border-box;
+            background-color: white;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+        
+        .printed-photo.printing {
+            top: -2px; /* Slide down into view */
+        }
+
+        .pull-down-lip {
+            margin-top: 15px;
+            background: linear-gradient(to bottom, #d1d5db, #6b7280);
+            padding: 6px 0;
+            width: 100%;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: #111;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            border: 1px solid #333;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .action-buttons {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* Prevent clicking while hidden */
+        }
+        
+        .action-buttons.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: Setup & Theme Selection -->
+    <div id="screen-setup" class="screen">
+        <h1>CRAZY ROLLBOOTH</h1>
+        <p class="subtitle">Step 1: Choose your aesthetic.</p>
+        
+        <div style="margin-bottom: 40px;">
+            <button class="theme-btn" onclick="setTheme('default')">Classic Cream</button>
+            <button class="theme-btn" onclick="setTheme('theme-cyberpunk')">Cyberpunk</button>
+            <button class="theme-btn" onclick="setTheme('theme-darkroom')">Darkroom</button>
+        </div>
+        
+        <button onclick="startBooth()" style="font-size: 1.4rem; padding: 18px 45px;">ENTER BOOTH 📸</button>
+    </div>
+
+    <!-- SCREEN 2: Camera Capture -->
+    <div id="screen-capture" class="screen hidden">
+        <h2 style="margin-bottom: 20px;">Strike a Pose!</h2>
+        
+        <div class="camera-container" id="camera-box">
+            <video id="cameraFeed" autoplay playsinline muted></video>
+            <div id="countdown-display"></div>
+        </div>
+        
+        <div id="shot-counter">Preparing camera...</div>
+        
+        <!-- Hidden Canvas for assembling the final strip (400x900 for 3 photos) -->
+        <canvas id="photoStripCanvas" width="400" height="900"></canvas>
+    </div>
+
+    <!-- SCREEN 3: Machine Dispenser -->
+    <div id="screen-processing" class="screen hidden">
+        <h2>Developing...</h2>
+        
+        <div class="machine-wrapper">
+            <div class="machine-chassis">
+                
+                <!-- Left Panel (Timer) -->
+                <div class="machine-panel-left">
+                    <div class="machine-text">PHOTOS DELIVERED<br>HERE IN</div>
+                    <div class="timer-box" id="machine-timer">5</div>
+                    <div class="machine-text">SECONDS</div>
+                    
+                    <div class="led-indicator" id="machine-led"></div>
+                    
+                    <div class="machine-text" style="font-size: 0.55rem; opacity: 0.8;">
+                        PHOTOS MAY BE TAKEN<br>WHEN GREEN LIGHT IS ON
+                    </div>
+                </div>
+                
+                <!-- Right Panel (Slot) -->
+                <div class="machine-panel-right">
+                    <!-- Overlow:hidden slot container -->
+                    <div class="machine-slot">
+                        <!-- Sliding Image Tag -->
+                        <img id="finalPrintedPhoto" src="" alt="Your Photo Strip" class="printed-photo">
+                    </div>
+                    <div class="pull-down-lip">PULL DOWN ↓</div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="action-buttons" id="final-actions">
+            <button onclick="downloadPhoto()">Download PNG 📥</button>
+            <button onclick="resetBooth()" style="background-color: #111; color: white;">Take Another 🔄</button>
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBALS ---
+        let streamRef = null;
+        const totalShots = 3;
+        let shotsTaken = 0;
+        
+        // DOM Elements
+        const video = document.getElementById('cameraFeed');
+        const canvas = document.getElementById('photoStripCanvas');
+        const ctx = canvas.getContext('2d');
+        const camBox = document.getElementById('camera-box');
+        const countDisplay = document.getElementById('countdown-display');
+        const shotTracker = document.getElementById('shot-counter');
+
+        // --- 1. THEME LOGIC (localStorage) ---
+        function setTheme(themeName) {
+            document.body.className = themeName;
+            // Optionally save to local storage if desired for persistence
+            // localStorage.setItem('boothTheme', themeName);
+        }
+
+        // --- 2. CAMERA INITIALIZATION (getUserMedia) ---
+        async function startBooth() {
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('screen-capture').classList.remove('hidden');
+
+            try {
+                // Request webcam access
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+                });
+                
+                // Attach to video element
+                video.srcObject = stream;
+                streamRef = stream;
+
+                // Prepare the canvas background (White strip border)
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Wait for video metadata to load, then start sequence
+                video.onloadedmetadata = () => {
+                    shotTracker.innerText = "Get Ready!";
+                    setTimeout(runCaptureSequence, 2000); 
+                };
+
+            } catch (err) {
+                console.error(err);
+                alert("Camera access denied! Please allow webcam permissions.");
+                resetBooth();
+            }
+        }
+
+        // --- 3. PHOTO SEQUENCE LOGIC (Canvas drawImage) ---
+        function runCaptureSequence() {
+            if (shotsTaken >= totalShots) {
+                goToProcessing();
+                return;
+            }
+
+            shotTracker.innerText = `Photo ${shotsTaken + 1} of ${totalShots}`;
+            let secondsLeft = 3;
+            countDisplay.innerText = secondsLeft;
+
+            // 3-second countdown loop
+            const timer = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft > 0) {
+                    countDisplay.innerText = secondsLeft;
+                } else {
+                    clearInterval(timer);
+                    countDisplay.innerText = "";
+                    
+                    takeSnapshot(shotsTaken); // Capture frame
+                    shotsTaken++;
+                    
+                    // Flash screen effect
+                    camBox.classList.add('flash');
+                    setTimeout(() => {
+                        camBox.classList.remove('flash');
+                        // Wait a bit, then recursive call for next photo
+                        setTimeout(runCaptureSequence, 1000); 
+                    }, 150);
+                }
+            }, 1000);
+        }
+
+        function takeSnapshot(index) {
+            // We want each photo to be 300px tall (900px total / 3 photos).
+            // We'll leave a 20px padding around each photo inside the strip.
+            const padding = 20;
+            const photoWidth = canvas.width - (padding * 2); // 400 - 40 = 360
+            const photoHeight = 300 - (padding * 2); // 300 - 40 = 260
+            
+            // Calculate Y offset based on which shot we are on (0, 1, or 2)
+            const yOffset = (index * 300) + padding;
+
+            // Handle the Mirror Effect:
+            // Since the HTML video is mirrored via CSS, we must mirror the canvas context 
+            // before drawing, so the final saved image looks like what the user saw.
+            ctx.save();
+            ctx.translate(canvas.width, 0); // Move origin to the right edge
+            ctx.scale(-1, 1); // Flip horizontally
+
+            // Because we flipped the X axis, we have to adjust the X starting coordinate.
+            // X becomes: (canvas.width) - (padding) - (photoWidth) -> 400 - 20 - 360 = 20
+            ctx.drawImage(video, padding, yOffset, photoWidth, photoHeight);
+            
+            ctx.restore(); // Restore context so we don't mess up future draws
+        }
+
+        // --- 4. PROCESSING & ANIMATION LOGIC ---
+        function goToProcessing() {
+            // Stop camera stream to save resources
+            if(streamRef) {
+                streamRef.getTracks().forEach(track => track.stop());
+            }
+
+            document.getElementById('screen-capture').classList.add('hidden');
+            document.getElementById('screen-processing').classList.remove('hidden');
+
+            startMachineCountdown();
+        }
+
+        function startMachineCountdown() {
+            let timeLeft = 5;
+            const timerDisplay = document.getElementById('machine-timer');
+            timerDisplay.innerText = timeLeft;
+            
+            const machineInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(machineInterval);
+                    timerDisplay.innerText = "0";
+                    triggerPrintAnimation();
+                }
+            }, 1000);
+        }
+
+        function triggerPrintAnimation() {
+            // 1. Turn LED green
+            const led = document.getElementById('machine-led');
+            led.classList.add('green');
+
+            // 2. Extract final image from Canvas to Data URL
+            const finalImageData = canvas.toDataURL('image/png');
+            
+            // 3. Set the image source inside the hidden slot
+            const printImage = document.getElementById('finalPrintedPhoto');
+            printImage.src = finalImageData;
+
+            // 4. Trigger CSS slide-down animation
+            // Short timeout ensures the DOM updates the src before starting transition
+            setTimeout(() => {
+                printImage.classList.add('printing');
+            }, 100);
+
+            // 5. Show download buttons after the 5s animation is complete
+            setTimeout(() => {
+                document.getElementById('final-actions').classList.add('visible');
+            }, 5000);
+        }
+
+        // --- 5. UTILITY FUNCTIONS ---
+        function downloadPhoto() {
+            const link = document.createElement('a');
+            link.download = `CrazyBooth_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function resetBooth() {
+            // Reset state variables
+            shotsTaken = 0;
+            
+            // Reset Machine UI
+            document.getElementById('machine-led').classList.remove('green');
+            const printImg = document.getElementById('finalPrintedPhoto');
+            printImg.classList.remove('printing');
+            printImg.src = "";
+            document.getElementById('final-actions').classList.remove('visible');
+            
+            // Reset Screens
+            document.getElementById('screen-processing').classList.add('hidden');
+            document.getElementById('screen-capture').classList.add('hidden');
+            document.getElementById('screen-setup').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
