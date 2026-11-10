@@ -1437,6 +1437,74 @@
         }
     };
 </script>
+    // Your Live Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyC0KIXTS8WwBJW66NguXpvlnQCWFK8tz6s",
+        authDomain: "icc-eventpass-846c7.firebaseapp.com",
+        projectId: "icc-eventpass-846c7",
+        storageBucket: "icc-eventpass-846c7.firebasestorage.app",
+        messagingSenderId: "1082994796693",
+        appId: "1:1082994796693:web:61e841a44e07584133d39c"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Global App State
+    window.attendanceLogs = [];
+    window.activeFilter = 'ALL';
+    window.indoorDefenseMode = true;
+
+    // Authenticate Anonymously & Listen to Firestore Live
+    window.addEventListener('DOMContentLoaded', () => {
+        signInAnonymously(auth)
+            .then(() => {
+                console.log("Firebase Anonymous Auth Successful!");
+                initFirestoreSync();
+            })
+            .catch(error => {
+                console.error("Firebase Auth Failed:", error);
+            });
+    });
+
+    // Real-Time Cloud Listener
+    function initFirestoreSync() {
+        const q = query(collection(db, "attendance_logs"));
+        onSnapshot(q, (snapshot) => {
+            const logs = [];
+            snapshot.forEach((doc) => {
+                logs.push(doc.data());
+            });
+            window.attendanceLogs = logs;
+            renderAttendanceTable();
+            console.log("Synced logs from Firebase:", logs.length);
+        }, (error) => {
+            console.error("Firestore sync error:", error);
+        });
+    }
+
+    // Function to Push a Scanned Student to Firebase
+    window.processIncomingScan = async function(studentId, name, section) {
+        const newLog = {
+            studentId: studentId,
+            name: name,
+            section: section,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            status: "Verified ✓",
+            createdAt: serverTimestamp()
+        };
+
+        try {
+            // Write directly to Firestore cloud database
+            await addDoc(collection(db, "attendance_logs"), newLog);
+            console.log("Successfully written to Firebase!");
+        } catch (e) {
+            console.error("Error writing to Firestore:", e);
+        }
+    };
+</script>
 
     // ==========================================================================
     // 1. GLOBAL STATE
