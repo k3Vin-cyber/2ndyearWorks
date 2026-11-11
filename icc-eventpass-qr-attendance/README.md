@@ -1,64 +1,152 @@
-# 🎟️ ICC EventPass: Official Student QR Attendance & Geofenced Check-In System
+# ⚡ ICC EventPass — Role-Based Dynamic QR Attendance & Geofenced Kiosk System
 
-**Institution:** Interface Computer College (ICC) – Iloilo City (BSIT Department)  
-**Instructor:** Joshua V. Porras  
-**Subjects:** Human-Computer Interaction 2 (HCI) & Platform Technologies  
-**Folder / Package Name:** `icc-eventpass-qr-attendance`
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![JavaScript ES6+](https://img.shields.io/badge/JavaScript_ES6+-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![Firebase](https://img.shields.io/badge/Firebase_Cloud-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Vercel](https://img.shields.io/badge/Vercel_HTTPS-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
----
-
-## 🚀 1. Project Overview & Purpose
-
-**ICC EventPass** is a mobile-first web utility engineered specifically for Interface Computer College (ICC) students, Student Government (SG) officers, and departmental organizers. It replaces slow, error-prone paper sign-in sheets during ICC General Assemblies, BSIT / Computer Studies days, NSTP outreach programs, and Intramurals with an optical QR check-in workflow.
-
-Designed with a **Mobbin.com Swiss Editorial UI/UX architecture**, the platform combines a Split Screen Student Security Gate, a Live Digital Student Wallet Pass Generator, an iOS Framed Optical Camera QR Scanner with Dynamic Island telemetry, Haversine GPS Campus Verification, and a Real-Time Cloud Attendance Directory with one-click CSV export.
+> **A combined Human-Computer Interaction (HCI 2) and Platform Technologies capstone project built for Interface Computer College (ICC) — Iloilo City.**
 
 ---
 
-## 👥 2. Grouping & Deployment Rules
+## 📋 Project Metadata
 
-* **Grouping:** Done in **solo or duo** pairing as per curriculum guidelines.
-* **Repository Structure:** Hosted inside the `html-drills` branch under the dedicated folder: `icc-eventpass-qr-attendance/`.
-* **Hosting & HTTPS:** Deployed on **Vercel** to provide the secure `https://` environment required by mobile browsers for camera and geolocation permissions.
-
----
-
-## 🔄 3. Core User Flow
-
-1. **Security Authentication Gate:** Students sign in using their **Full Name** as their username and their **6-digit Student Number** (no spaces) as their security password, or use the *Quick Demo Sign-In* pill during oral defense grading.
-2. **Program & Section Selection:** Users select their **Program** (`BSIT`, `BSCS`, `BSCpE`, `BSBA`, `BSOA`) and **Year & Section** (`1`, `2`, `3`, `4`).
-3. **Digital Student Wallet Pass Generation:** The authenticated student's credentials automatically populate an iOS Wallet-style pass containing a high-contrast QR matrix encoded with a UTF-8 JSON payload. Students can click **Download PNG Pass** (rendered via the HTML5 `<canvas>` 2D API at `600x820px`) or click **Test Scan This Pass Now** to immediately simulate scanning their pass.
-4. **Optical QR Scanning & Geofence Verification:** At the venue entrance, officers launch the device camera (`html5-qrcode`) or trigger the **Instant Defense Simulator** (*Valid Scan*, *Duplicate Scan*, *Outside GPS*). The system verifies that the scan is within `15m` of the Interface Computer College campus coordinates (`10.6969° N, 122.5644° E`), blocks duplicate check-ins with a 3-second optical cooldown lock, and triggers Web Audio APT acoustic chiling alongside Dynamic Island visual feedback.
-5. **Live Directory Filtering & Export:** Organizers filter attendance records in real time using Mobbin horizontal filter pills by Program (`BSIT`, `BSCS`, `BSCpE`, `BSBA`, `BSOA`), Year & Section (`1` to `4`), or keyboard search (`Ctrl+K` / `Cmd+K`), and export the verified roster to an Excel-ready `.csv` file.
+| Field | Details |
+| :--- | :--- |
+| **Project Title** | ICC EventPass — Role-Based Dynamic QR Attendance & Geofenced Check-In System |
+| **Developers / Presenters** | **Kevin Bryan M. Galgo** & **Noviehm Grace Alonsabe** (BSIT-2) |
+| **Institution** | Interface Computer College (ICC) — Iloilo City |
+| **Course Subjects** | Human-Computer Interaction 2 (HCI 2) & Platform Technologies |
+| **Instructor** | Sir Joshua V. Porras |
+| **Cloud Infrastructure** | Firebase Authentication, Firebase Realtime Database & Cloud Firestore (`asia-southeast1` Singapore) |
+| **Deployment Branch** | `html-drills` (`icc-eventpass-qr-attendance/index.html`) |
 
 ---
 
-## 🎨 4. Required Application of Concepts (Rubric Mapping)
+## 🎯 Executive Summary
 
-### A. Human-Computer Interaction (HCI) Concepts Applied
-* **Mobbin.com Swiss Editorial Visual Hierarchy & Light/Dark Mode:** Uses high contrast monochromatic surfaces (`#F7F7F8` stone canvas, `#FFFFFF` pure cards, `#111111` ink black pill controls, and `#1;text (px)$` hairline borders) alongside a full Dark Mode toggle to reduce eye strain in dim auditoriums or outdoor venues.
-* **Two-Step Progressive Disclosure (Hick's Law):** Instead of overwhelming mobile users with a single 20-item dropdown menu, cohort selection is split into two linked steps: 
-  * *Step 1:* Program (`BSIT`, `BSCS`, `BSCpE`, `BSBA`, `BSOA`) 
-  * *Step 2:* Year & Section (`1`, `2`, `3`, `4`), dynamically formatting the combined cohort code (e.g., `BSIT-2`).
-* **Input Constraints & Poka-Yoke Error Prevention (6-Digit Student ID):** All student ID inputs enforce `inputmode="numeric"`, `maxlength="6"`, and real-time regex sanitization (`value.replace(/\D/g, '').slice(0, 6)`) with a live `0 / 6 digits` → `6 / 6 digits ✓` counter so spaces, dashes, or letters can never corrupt attendance records.
-* **Multi-Modal Sensory Feedback (Web Audio API + Dynamic Island):** Synthesizes zero-latency browser audio oscillators—an ascending dual tone sine chime ($520\text{ Hz} \rightarrow 1318.5\text{ Hz}$) on verified check-in, and a low frequency sawtooth buzz ($220\text{ Hz} \rightarrow 165\text{ Hz}$) on duplicate or out-of-range errors. Visual combines a simulated iOS Dynamic Island status pill, a pop-in verification overlay (`.animate-pop`), and a horizontal error shake animation (`#keyframes hciShake`).
-* **Optical Debouncing (3-Second Scan Cooldown):** Prevents continuous camera frame reads ($\ge 10\text{ fps}$) from spamming duplicate error alerts while a student holds their phone in front of the lens.
-* **Accessibility & Error Recovery (Manual Check-In Fallback):** Provides an on-screen Manual Check-In Fallback form if a student's phone battery is dead or their screen is cracked, plus an accessible audio mute toggle and `aria-live="polite"` status announcements.
-* **Thumb-Zone Mobile Ergonomics:** Puts primary navigation into a floating bottom pill bar (`fixed bottom-4`) on mobile viewports while expanding into a top segmented control on desktop viewports.
+Traditional paper attendance sheets create long queues at campus events, while standard static QR codes can be easily screenshot and forwarded to absent classmates. **ICC EventPass** solves both problems inside a responsive, zero-build single-file web application (`index.html`).
 
-### B. Platform Technologies Concepts Applied
-* **Camera & MediaDevices Web Api (`html5-qrcode`):** Streams live video from device cameras (`facingMode: "environment"` for rear mobile cameras) with an interactive camera flip button) and decodes UTF-8 JSON payloads inside QR matrices.
-* **HTML5 Geolocation API & Haversine Spherical Trigonometry:** Retrieves live device coordinates via `navigator.geolocation.getCurrentPosition()` and calculates the exact spherical distance $d$ in meters from the Interface Computer College venue using the Haversine Formula:
-  $$d = 2R \arcsin\left(\sqrt{\sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cos(\phi_2)\sin^2\left(\frac{\Delta\lambda}{2}\right)}\right)$$
-* **HTML5 `<canvas>` 2D Render API:** Composites the student's QR code, 6 digit ID, name, section, and official Interface Computer College branding onto an off-screen `600 \times 820\text{ (px)} \text{ <canvas>}` and serializes it into a downloadable PNG (`canvas.toDataURL('image/png')`).
-* **Cloud NoSQL Persistence (Firebase Firestore):** Uses Firebase Authentication and Cloud Firestore (`onSnapshot` real-time listeners) to sync attendance logs across devices, paired with an automatic local state fallback and `localStorage` session persistence so the app runs reliably even offline.
+The system pairs **cognitive HCI engineering** (Poka-Yoke mistake-proofing, Hick's Law progressive disclosure, multi-modal audio-visual feedback, and manual error recovery) with **modern Platform Technologies** (dynamic 30-second rotating QR tokens with cryptographic nonces, continuous `Html5Qrcode` optical scanning, Haversine GPS geofencing, Web Audio API sound synthesis, HTML5 Canvas PNG export, and real-time Firebase Cloud synchronization).
 
 ---
 
-## 🛠️ 5. Step-by-Step GitHub & Vercel Deployment Guide
+## 🚀 Core Architectural Features
 
-### Step 1: Clone & Navigate to Your Local Repository
-Open your terminal in VS Code and make sure you are on your `html-drills` branch:
+### 1. Secure Login Gate & Student Registry Credential Validation
+* **Student Record Cross-Check (`STUDENT_REGISTRY`):** Validates the user's **Full Name** and **6-Digit ICC Student ID** against official student records to prevent identity spoofing.
+* **Firebase Authentication (`signInAnonymously`):** Establishes an authenticated cloud session upon login while persisting session state in `localStorage` for instant page reloads.
+* **One-Click Oral Defense Presets:** Includes quick-fill preset buttons for **Kevin (Student Dashboard View)** and **Noviehm (Admin Kiosk View)** for rapid live grading demonstrations.
+
+### 2. Role-Based Single-Page Routing System (`routeToView`)
+* **🎓 Personal Student Dashboard (`#view-student`):** Automatically routes authenticated students to their dynamic QR pass wallet and personal monthly attendance ledger.
+* **📷 Admin Scanner Kiosk (`#view-kiosk`):** Routes Student Government (SG) officers and event admins directly to the optical camera scanner, token/nonce verification console, and manual fallback form.
+* **📊 Live Attendance Directory (`#view-directory`):** Provides real-time KPI counters, cohort filtering (`BSIT`, `BSCS`, `BSCpE`, `BSBA`, `BSOA`), instant search, and one-click `.csv` spreadsheet export.
+
+### 3. Dynamic Auto-Refreshing Student QR Pass & Monthly History
+* **30-Second Rotating QR Matrix (`QRCode.js`):** Embeds a live JSON payload containing `studentId`, `name`, `section`, a random 8-character hexadecimal **Cryptographic Nonce** (e.g., `9F2A-71C4`), `issuedAt`, and `expiresAt` ($t_{\text{issued}} + 30\text{ s}$).
+* **Visual Countdown Progress Bar:** Displays a live 30-second countdown bar that automatically rotates the QR matrix and nonce when the timer reaches $0\text{ s}$, rendering saved screenshots useless.
+* **Collapsible Monthly Attendance Accordions:** Groups the student's personal check-in history by month (**November 2026**, **October 2026**, **September 2026**) with interactive expand/collapse headers.
+* **Real-Time Multi-Modal Scan Celebration:** Triggers a synthesized Web Audio API chime, a `canvas-confetti` burst, a floating verification toast, and an immediate token rotation the moment the pass is scanned.
+
+### 4. Continuous Optical Kiosk Scanner & 3-Layer Security Validator
+* **Hardware Camera Integration (`Html5Qrcode`):** Continuously scans student QR passes at $10\text{ fps}$ with an automatic **3-second optical debounce lock** (`isScanCooldown`) to prevent accidental double-reads.
+* **Three-Stage Token & Nonce Verification (`validateAndLogQRToken`):**
+  1. **GPS Geofence Guard:** Confirms physical presence within $150\text{ m}$ of ICC Iloilo City ($10.6970^\circ\text{ N}, 122.5645^\circ\text{ E}$) using spherical trigonometry, with an **Indoor GPS Bypass** toggle for classroom demos.
+  2. **Token Expiration Check:** Rejects any QR code where $t_{\text{now}} > t_{\text{expiresAt}}$ (`QR TOKEN EXPIRED — SCREENSHOT BLOCKED`).
+  3. **Cryptographic Nonce Replay Guard:** Tracks every consumed nonce inside an in-memory `Set` (`usedNonces`) synced with Firebase, immediately blocking any second scan of the same token (`NONCE REPLAY ATTACK BLOCKED`).
+
+---
+
+## 🧠 Human-Computer Interaction (HCI 2) Principles Applied
+
+| HCI Principle | Implementation in ICC EventPass | User Experience Benefit |
+| :--- | :--- | :--- |
+| **Poka-Yoke (Mistake-Proofing)** | `sanitizeStudentIdInput()` runs `.replace(/\D/g, '').slice(0, 6)` on every keystroke with a live `6 / 6 digits` counter. | Prevents users from typing letters, spaces, or symbols into the 6-digit ICC Student ID field. |
+| **Hick's Law (Progressive Disclosure)** | Splits cohort selection into **Step 1: Program** (`5` options) and **Step 2: Year & Section** (`4` dynamically labeled options). | Eliminates cognitive overload compared to scrolling through a single $20$-item dropdown list. |
+| **Multi-Modal Feedback** | Pairs iOS Dynamic Island visual banners (Emerald, Amber, Rose) and confetti with Web Audio API synthesized tones. | Allows kiosk operators to distinguish valid scans from expired/duplicate scans by sound alone. |
+| **Graceful Error Recovery** | Includes a dedicated **Manual Check-In Fallback** form on the Admin Kiosk. | Enables officers to log students whose phone batteries died or screens are cracked. |
+
+---
+
+## 🛠️ Platform Technologies & Browser APIs Integrated
+
+### 1. Haversine Spherical GPS Geofencing (`navigator.geolocation`)
+To verify that check-ins occur on campus, the app calculates the great-circle distance $d$ (in meters) between the user's coordinates $(\phi_1, \lambda_1)$ and Interface Computer College $(\phi_2, \lambda_2)$ using Earth's mean radius $R = 6,371,000\text{ m}$:
+
+$$a = \sin^2\left(\frac{\Delta\phi}{2}\right) + \cos(\phi_1)\cdot\cos(\phi_2)\cdot\sin^2\left(\frac{\Delta\lambda}{2}\right)$$
+
+$$d = 2R \cdot \operatorname{atan2}\left(\sqrt{a}, \sqrt{1 - a}\right)$$
+
+If $d > 150\text{ m}$ and Strict GPS Mode is active, the check-in is automatically rejected.
+
+### 2. Web Audio API Synthesizer (`AudioContext`)
+Instead of relying on external `.mp3` assets that can fail to load on slow networks, `playSynthesizedTone()` generates real-time oscillator waveforms directly in hardware:
+* **Verified Check-In (`success`):** Ascending `sine` wave ramping from $587.33\text{ Hz}$ ($\text{D}_5$) to $1174.66\text{ Hz}$ ($\text{D}_6$) over $0.30\text{ s}$.
+* **Blocked / Invalid Scan (`error`):** Low `sawtooth` warning buzz ramping down from $195\text{ Hz}$ to $130\text{ Hz}$ over $0.34\text{ s}$.
+
+### 3. Hybrid Cloud + Local Persistence (`Firebase RTDB` + `Firestore` + `localStorage`)
+* **Firebase Realtime Database (`onValue` & `set`):** Streams live check-ins to `https://icc-eventpass-846c7-default-rtdb.asia-southeast1.firebasedatabase.app/attendance_logs`.
+* **Cloud Firestore (`onSnapshot` & `setDoc`):** Mirrors structured documents inside the `attendance_logs` collection.
+* **Offline-First Resilience (`localStorage`):** Caches all logs locally so the kiosk never crashes if campus Wi-Fi drops mid-event.
+
+### 4. HTML5 Canvas 2D Printable Pass & CSV Export
+* **Printable PNG Wallet Pass (`downloadStudentPassPNG`):** Renders a $600 \times 820\text{ px}$ high-contrast ID card with the student's QR matrix, 6-digit ID, cohort badge, and active nonce.
+* **Spreadsheet Export (`exportDirectoryCSV`):** Encodes the attendance roster into RFC-4180 compliant `.csv` format for Microsoft Excel and Google Sheets.
+
+---
+
+## 🔍 Quick Defense Code Lookup (`Ctrl + F` Cheat Sheet)
+
+Use `Ctrl + F` inside `index.html` in VS Code to jump straight to any method during your code walkthrough:
+
+| Feature to Demonstrate | Search Keyword (`Ctrl + F`) | Description |
+| :--- | :--- | :--- |
+| **Poka-Yoke Input Sanitizer** | `sanitizeStudentIdInput` | Strips non-numeric characters and enforces a strict 6-digit cap. |
+| **Hick's Law Dynamic Labels** | `updateYearLabels` | Dynamically updates Year 1–4 labels based on the chosen Program. |
+| **Login & Registry Validation** | `handleRoleBasedLogin` | Verifies `STUDENT_REGISTRY`, triggers Firebase Auth, and routes by role. |
+| **Role-Based View Router** | `routeToView` | Switches seamlessly between `student`, `kiosk`, and `directory` views. |
+| **Cryptographic Nonce Generator** | `generateCryptographicNonce` | Generates random 8-character hexadecimal token IDs (`XXXX-XXXX`). |
+| **30s Dynamic QR Generator** | `regenerateStudentQRToken` | Builds the expiring JSON payload and renders `new QRCode(...)`. |
+| **Collapsible Monthly History** | `renderStudentMonthlyHistory` | Groups personal attendance records into expandable monthly accordions. |
+| **3-Layer Kiosk Token Validator** | `validateAndLogQRToken` | Validates 150m GPS geofence, 30s `expiresAt`, and `usedNonces` replay guard. |
+| **Continuous Camera Scanner** | `toggleKioskCamera` | Manages the `Html5Qrcode` camera stream and 3-second cooldown lock. |
+| **Haversine GPS Calculation** | `pingHardwareGPS` | Computes spherical meter distance from ICC Iloilo coordinates. |
+| **Web Audio Chime Synthesizer** | `playSynthesizedTone` | Synthesizes `sine` and `sawtooth` audio feedback via `AudioContext`. |
+| **Dual Firebase Cloud Sync** | `firebaseConfig` | Connects Firebase Auth, Realtime Database (`ref`), and Firestore (`collection`). |
+
+---
+
+## 💻 Local Setup & Live Deployment Guide
+
+### 1. Run Locally in VS Code
+1. Open the `icc-eventpass-qr-attendance` folder in **Visual Studio Code**.
+2. Right-click `index.html` and select **Open with Live Server** (or open `index.html` directly in Chrome/Edge).
+
+### 2. Firebase Realtime Database Rules (`asia-southeast1`)
+Ensure your Firebase Realtime Database rules allow live kiosk reads and writes during your defense demo:
+```json
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
+### 3. Push Updates to GitHub & Vercel
+Run these commands in your VS Code terminal to deploy changes live:
 ```bash
-git checkout html-drills
-git pull origin html-drills
+git add index.html README.md
+git commit -m "Update ICC EventPass v2 with role routing, dynamic nonce QR, and README docs"
+git push origin html-drills
+```
+
+---
+
+## 👥 Authors & Acknowledgments
+
+* **Kevin Bryan M. Galgo** — *Lead Developer & Platform Technologies Architecture (BSIT-2)*
+* **Noviehm Grace Alonsabe** — *Co-Lead Developer & HCI / UI-UX Engineering (BSIT-2)*
+* **Instructor:** Sir Joshua V. Porras — *Interface Computer College (ICC), Iloilo City*
